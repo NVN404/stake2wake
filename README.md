@@ -1,6 +1,6 @@
-# 🌅 Wake2Earn — Stake BONK to Beat the Sunrise!
+# 🌅 Stake2Wake — Stake BONK to Beat the Sunrise!
 
-Wake2Earn is a Solana-based decentralized app (dApp) that gamifies early rising by letting users stake BONK tokens into a daily wake-up challenge. If they wake up on time and check in, they keep their stake — if they fail, their BONK is slashed and sent to the protocol treasury.
+Stake2Wake is a Solana-based decentralized app (dApp) that gamifies early rising by letting users stake BONK tokens into a daily wake-up challenge. If they wake up on time and check in, they keep their stake — if they fail, their BONK is slashed and sent to the protocol treasury.
 
 This project is built using Anchor for smart contracts and React Native (Expo) for the mobile dApp.
 
