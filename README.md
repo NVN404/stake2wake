@@ -19,7 +19,7 @@ Habit-tracking apps exist, but they’re centralized, and users don’t face mea
 
 ## 💡 The Solution
 
-Wake2Earn turns morning discipline into a high-stakes habit — literally.
+Stake2Wake turns morning discipline into a high-stakes habit — literally.
 
 By requiring users to stake BONK tokens against their commitment, we introduce:
 - **Incentive** to wake up
