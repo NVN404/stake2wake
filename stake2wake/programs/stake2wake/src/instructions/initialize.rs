@@ -30,7 +30,7 @@ pub struct Initialize<'info> {
         associated_token::mint = bonk_mint,
         associated_token::authority = treasury
     )]
-    pub bonk_treasury_ata: InterfaceAccount<'info, TokenAccount>, // associated token account for BONK treasury
+    pub bonk_ata: InterfaceAccount<'info, TokenAccount>, // associated token account for BONK treasury
 
     pub rent: Sysvar<'info, Rent>, // system variable for rent exemption
 
