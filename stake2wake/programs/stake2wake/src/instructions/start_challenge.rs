@@ -13,9 +13,10 @@ pub struct StartChallenge<'info> {
         seeds = [b"user_challenge", user.key().as_ref()],
         bump
     )]
-    pub user_challenge: Account<'info, UserChallenge>,
+    pub user_challenge: Account<'info, UserChallenge>,// we are creating account for userchallenge first
 
-    // The user who is starting the challenge pays rent and signs tx
+    
+
     #[account(mut)]
     pub user: Signer<'info>,
 
