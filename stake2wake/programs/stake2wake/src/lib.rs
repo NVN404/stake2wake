@@ -49,17 +49,25 @@ pub mod stake2wake {
         });
         Ok(())
     }
-
     pub fn check_status(ctx: Context<CheckStatus>) -> Result<()> {
-        ctx.accounts.check_status()?;
+        let did_complete = ctx.accounts.check_status()?; // getting the status of the challenge 
+        let challenge = &ctx.accounts.user_challenge;
+
+        // bool to find the wether user recieves the bonk or not
+        let tokens_returned = did_complete && challenge.completed_days == challenge.total_days;
+        let was_failed = !challenge.is_active && !tokens_returned;
 
         emit!(CheckStatusEvent {
             user: ctx.accounts.user.key(),
-            user_challenge: ctx.accounts.user_challenge.key(),
-            completed_days: ctx.accounts.user_challenge.completed_days,
-            last_check_time: ctx.accounts.user_challenge.last_check_time,
-            is_active: ctx.accounts.user_challenge.is_active,
+            user_challenge: challenge.key(),
+            completed_days: challenge.completed_days,
+            last_check_time: challenge.last_check_time,
+            is_active: challenge.is_active,
+            did_complete,
+            tokens_returned,
+            was_failed,
         });
+
         Ok(())
     }
 }
