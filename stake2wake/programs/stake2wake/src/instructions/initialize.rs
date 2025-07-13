@@ -51,7 +51,7 @@ impl<'info> Initialize<'info> {
         self.treasury.set_inner(Treasury {
             authority: self.authority.key(),
             bonk_mint: self.bonk_mint.key(),
-            bonk_treasury_ata: self.bonk_treasury_ata.key(),
+            bonk_treasury_ata: self.bonk_ata.key(),
             bump,
             total_collected: 0,
         });
