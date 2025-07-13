@@ -10,4 +10,10 @@ pub enum Stake2WakeError {
     InvalidTotalDays,
     #[msg("The wakeup time must be in the future")]
     InvalidWakeupTime,
+    #[msg("The challenge has already been completed")]
+    AlreadyCheckedInToday,
+    #[msg("Check-in time missed.")]
+    MissedWakeupTime,
+    #[msg("Challenge is no longer active.")]
+    InactiveChallenge,
 }

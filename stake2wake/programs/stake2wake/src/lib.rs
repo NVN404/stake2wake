@@ -49,4 +49,17 @@ pub mod stake2wake {
         });
         Ok(())
     }
+
+    pub fn check_status(ctx: Context<CheckStatus>) -> Result<()> {
+        ctx.accounts.check_status()?;
+
+        emit!(CheckStatusEvent {
+            user: ctx.accounts.user.key(),
+            user_challenge: ctx.accounts.user_challenge.key(),
+            completed_days: ctx.accounts.user_challenge.completed_days,
+            last_check_time: ctx.accounts.user_challenge.last_check_time,
+            is_active: ctx.accounts.user_challenge.is_active,
+        });
+        Ok(())
+    }
 }
