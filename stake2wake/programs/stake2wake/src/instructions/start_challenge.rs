@@ -1,84 +1,102 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{transfer, Token, TokenAccount, Transfer};
+use anchor_spl::{
+    associated_token::AssociatedToken,
+    token::{ transfer_checked, Token, TokenAccount, TransferChecked },
+    token_interface::Mint,
+};
 
-use crate::state::UserChallenge;
+use crate::state::ChallengeAccount;
+use crate::error::Stake2WakeError;
 
 #[derive(Accounts)]
 pub struct StartChallenge<'info> {
+    // the person who is starting the challenge
+    #[account(mut)]
+    pub user: Signer<'info>,
+
     // Creates a new PDA account to store user challenge data
     #[account(
         init,
         payer = user,
-        space = 8 + UserChallenge::INIT_SPACE, // 8 bytes for discriminator + struct size
-        seeds = [b"user_challenge", user.key().as_ref()],
+        space = 8 + ChallengeAccount::INIT_SPACE, // 8 bytes for discriminator + struct size
+        seeds = [b"challenge", user.key().as_ref(), clock.unix_timestamp.to_le_bytes().as_ref()], // using clock here to allow multiple challenges
         bump
     )]
-    pub user_challenge: Account<'info, UserChallenge>,// we are creating account for userchallenge first
+    pub user_challenge: Account<'info, ChallengeAccount>, // we are creating account for userchallenge first
 
-    
-
-    #[account(mut)]
-    pub user: Signer<'info>,
-
-    // The user's token account (ata) from which stake will be deducted
-    #[account(mut)]
+    // the associated token account which is related to the user from which the stake will be taken
+    #[account(
+        mut,
+        associated_token::mint = bonk_mint,
+        associated_token::authority = user // authority is the user who is starting the challenge
+    )]
     pub user_token_account: Account<'info, TokenAccount>,
+
+    // The mint of the BONK token which is being staked
+    pub bonk_mint: InterfaceAccount<'info, Mint>,
 
     // The vault where the stake will be stored (
     #[account(
-        mut,
-        constraint = vault.mint == user_token_account.mint,    //must have same mint as user_token_account
-
+        init,
+        payer = user, // payer is the user who is starting the challenge
+        associated_token::mint = bonk_mint,
+        associated_token::authority = user_challenge // authority is the challenge account
     )]
     pub vault: Account<'info, TokenAccount>,
 
     // SPL Token program for performing token transfer
     pub token_program: Program<'info, Token>,
-
-    // Solana system program used for creating accounts
     pub system_program: Program<'info, System>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
 
     // Clock sysvar to get current onchain timestamp
     pub clock: Sysvar<'info, Clock>,
 }
 
-pub fn start_challenge(
-    ctx: Context<StartChallenge>,
-    wakeup_time: u64,  // When the user wants to wake up
-    stake_amount: u64, // Amount user is staking
-    total_days: u64,   // Number of days challenge lasts
-) -> Result<()> {
-    let clock = Clock::get()?; // Get current Unix timestamp
-    let start_time = clock.unix_timestamp as u64;
-    let end_time = start_time + total_days * 86400; // End time = start + N days
+impl<'info> StartChallenge<'info> {
+    pub fn start_challenge(
+        &mut self,
+        wakeup_time: u64, // When the user wants to wake up
+        stake_amount: u64, // Amount user is staking
+        total_days: u64, // Number of days challenge lasts
+        bump: u8
+    ) -> Result<()> {
+        require!(stake_amount > 0, Stake2WakeError::InvalidStakeAmount); // checking for the valid stake amount
+        require!(total_days > 0, Stake2WakeError::InvalidTotalDays); // checking for the valid total days
+        require!(
+            wakeup_time > (self.clock.unix_timestamp as u64),
+            Stake2WakeError::InvalidWakeupTime
+        ); // checking for the valid wakeup time
 
-    // Initialize the challenge account with all details
-    let challenge = &mut ctx.accounts.user_challenge;
-    challenge.user = ctx.accounts.user.key();
-    challenge.stake_amount = stake_amount;
-    challenge.is_active = true;
-    challenge.mint = ctx.accounts.user_token_account.mint;
-    challenge.vault = ctx.accounts.vault.key();
-    challenge.start_time = start_time;
-    challenge.end_time = end_time;
-    challenge.last_check_time = 0;
-    challenge.completed_days = 0;
-    challenge.total_days = total_days;
+        let now = self.clock.unix_timestamp as u64;
 
-    let (_pda, bump) = Pubkey::find_program_address(
-        &[b"user_challenge", ctx.accounts.user.key.as_ref()],
-        ctx.program_id,
-    );
-    challenge.bump = bump;
+        // creating an instance using set_inner method to update all the fileds at once
+        self.user_challenge.set_inner(ChallengeAccount {
+            user: self.user.key(),
+            wakeup_time,
+            stake_amount,
+            mint: self.bonk_mint.key(),
+            vault: self.vault.key(),
+            is_active: true,
+            start_time: now,
+            end_time: now + total_days * 86400, // 86400 seconds in a day
+            last_check_time: 0, // Initialize last check time to 0
+            completed_days: 0,
+            total_days,
+            bump,
+        });
 
-    // Transfer full stake to vault
-    let cpi_accounts = Transfer {
-        from: ctx.accounts.user_token_account.to_account_info(),
-        to: ctx.accounts.vault.to_account_info(),
-        authority: ctx.accounts.user.to_account_info(),
-    };
-    let cpi_ctx = CpiContext::new(ctx.accounts.token_program.to_account_info(), cpi_accounts);
-    transfer(cpi_ctx, stake_amount)?;
+        let cpi_program = self.token_program.to_account_info();
 
-    Ok(())
+        let cpi_accounts = TransferChecked {
+            from: self.user_token_account.to_account_info(),
+            mint: self.bonk_mint.to_account_info(),
+            to: self.vault.to_account_info(),
+            authority: self.user.to_account_info(),
+        };
+
+        let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
+
+        transfer_checked(cpi_ctx, stake_amount, 6)
+    }
 }
