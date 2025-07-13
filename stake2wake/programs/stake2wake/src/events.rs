@@ -21,3 +21,12 @@ pub struct StartChallengeEvent {
     pub stake_amount: u64, 
     pub total_days: u64, 
 }
+
+#[event]
+pub struct CheckStatusEvent{
+    pub user:Pubkey,
+    pub user_challenge:Pubkey,
+    pub completed_days: u64,
+    pub last_check_time: u64,
+    pub is_active: bool,
+}
