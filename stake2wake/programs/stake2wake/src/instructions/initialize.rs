@@ -41,7 +41,7 @@ pub struct Initialize<'info> {
 }
 
 impl<'info> Initialize<'info> {
-    pub fn initialize_treasury(&mut self, bump: u8) -> Result<()> {
+    pub fn initialize_treasury(&mut self, bumps: &InitializeBumps) -> Result<()> {
         let admin_pubkey = Pubkey::from_str(
             "Bt9AAsmv7ocm2kJsusYrk2gG1Sm6Fy6rS6dRtiC8xFGX"
         ).unwrap();
@@ -51,8 +51,8 @@ impl<'info> Initialize<'info> {
         self.treasury.set_inner(Treasury {
             authority: self.authority.key(),
             bonk_mint: self.bonk_mint.key(),
-            bonk_treasury_ata: self.bonk_ata.key(),
-            bump,
+            bonk_ata: self.bonk_ata.key(),
+            bump:bumps.treasury,
             total_collected: 0,
         });
         Ok(())

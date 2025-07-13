@@ -59,7 +59,7 @@ impl<'info> StartChallenge<'info> {
         wakeup_time: u64, // When the user wants to wake up
         stake_amount: u64, // Amount user is staking
         total_days: u64, // Number of days challenge lasts
-        bump: u8
+        bumps: &StartChallengeBumps
     ) -> Result<()> {
         require!(stake_amount > 0, Stake2WakeError::InvalidStakeAmount); // checking for the valid stake amount
         require!(total_days > 0, Stake2WakeError::InvalidTotalDays); // checking for the valid total days
@@ -83,7 +83,7 @@ impl<'info> StartChallenge<'info> {
             last_check_time: 0, // Initialize last check time to 0
             completed_days: 0,
             total_days,
-            bump,
+            bump: bumps.user_challenge,
         });
 
         let cpi_program = self.token_program.to_account_info();
