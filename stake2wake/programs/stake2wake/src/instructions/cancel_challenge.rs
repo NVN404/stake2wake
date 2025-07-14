@@ -1,26 +1,26 @@
 use anchor_lang::prelude::*;
 use anchor_spl::{
     associated_token::AssociatedToken,
-    token::{transfer_checked, Token, TokenAccount, TransferChecked},
+    token::{ transfer_checked, Token, TokenAccount, TransferChecked },
     token_interface::Mint,
 };
 
-use crate::state::{ChallengeAccount, Treasury};
+use crate::state::{ ChallengeAccount, Treasury };
 use crate::error::Stake2WakeError;
 
 #[derive(Accounts)]
 pub struct CancelChallenge<'info> {
     #[account(mut)]
-    pub user: Signer<'info>,// usert should sign
+    pub user: Signer<'info>, // usert should sign
     #[account(
         mut,
-        seeds = [b"challenge", user.key().as_ref(), user_challenge.start_time.to_le_bytes().as_ref()],
+        seeds = [b"challenge", user_challenge.user.key().as_ref(), user_challenge.start_time.to_le_bytes().as_ref()], // using clock here to allow multiple challenges
         bump = user_challenge.bump,
         has_one = user @ Stake2WakeError::Unauthorized,
         close = user
     )]
     pub user_challenge: Account<'info, ChallengeAccount>,
-    // challenge account 
+    // challenge account
 
     #[account(
         mut,
@@ -31,7 +31,7 @@ pub struct CancelChallenge<'info> {
     //users token ata (user wallet)
 
     pub bonk_mint: InterfaceAccount<'info, Mint>,
-    // bon tokens mint 
+    // bon tokens mint
 
     #[account(
         mut,
@@ -74,13 +74,9 @@ impl<'info> CancelChallenge<'info> {
         let total_duration = challenge.end_time.saturating_sub(challenge.start_time);
         let elapsed_time = now.saturating_sub(challenge.start_time);
         //declaration
-        
+
         // Calculate progress as a percentage (0 to 100) for linear interpolation calculation
-        let progress = if total_duration > 0 {
-            (elapsed_time * 100) / total_duration
-        } else {
-            0
-        };
+        let progress = if total_duration > 0 { (elapsed_time * 100) / total_duration } else { 0 };
 
         // Dynamic penalty: 20% early (0-25%), linear decrease to 5% late (75-100%)
         let penalty_percentage = if progress <= 25 {
@@ -89,19 +85,20 @@ impl<'info> CancelChallenge<'info> {
             5 // Late cancellation: 5% penalty
         } else {
             // Linear interpolation between 20% and 5% for 25% to 75% progress
-            20 - ((progress - 25) * (20 - 5) / (75 - 25))
+            20 - ((progress - 25) * (20 - 5)) / (75 - 25)
         };
 
         let penalty_amount = (challenge.stake_amount * penalty_percentage) / 100;
         // stake amount * percent in decimals to calculate the penalty
         let return_amount = challenge.stake_amount.saturating_sub(penalty_amount);
         // stake - penalty = return amount
-        
+
         // Update challenge status
         challenge.is_active = false;
 
         // Update treasury total collected , total = previos total + recently recieved
-        self.treasury.total_collected = self.treasury.total_collected.saturating_add(penalty_amount);
+        self.treasury.total_collected =
+            self.treasury.total_collected.saturating_add(penalty_amount);
 
         // Transfer penalty to treasury by performaing a cpi
         if penalty_amount > 0 {

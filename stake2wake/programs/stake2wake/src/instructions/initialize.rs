@@ -32,8 +32,6 @@ pub struct Initialize<'info> {
     )]
     pub bonk_ata: InterfaceAccount<'info, TokenAccount>, // associated token account for BONK treasury
 
-    pub rent: Sysvar<'info, Rent>, // system variable for rent exemption
-
     // programs useful for the transaction
     pub token_program: Interface<'info, TokenInterface>,
     pub system_program: Program<'info, System>,
