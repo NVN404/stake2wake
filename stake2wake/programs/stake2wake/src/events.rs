@@ -33,3 +33,14 @@ pub struct CheckStatusEvent {
     pub was_failed: bool,
     pub tokens_returned: bool,
 }
+
+#[event]
+pub struct CancelChallengeEvent{
+    pub user: Pubkey,
+    pub user_challenge: Pubkey,
+    pub penalty_amount: u64,
+    pub return_amount: u64,
+    pub vault: Pubkey,
+    pub treasury_ata: Pubkey,
+    pub timestamp: u64,
+}

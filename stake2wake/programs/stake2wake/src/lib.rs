@@ -68,6 +68,39 @@ pub mod stake2wake {
             was_failed,
         });
 
+    
+
         Ok(())
     }
+
+    pub fn cancel_challenge(ctx: Context<CancelChallenge>) -> Result<()> {
+    // Call the internal logic
+    ctx.accounts.cancel_challenge()?;
+
+    // Extract necessary fields for event
+    let challenge = &ctx.accounts.user_challenge;
+    let treasury_ata = ctx.accounts.treasury_ata.key();
+    let vault = ctx.accounts.vault.key();
+    let timestamp = ctx.accounts.clock.unix_timestamp as u64;
+
+    let stake_amount = challenge.stake_amount;
+    let user_balance = ctx.accounts.user_token_account.amount;
+
+    let return_amount = user_balance;
+    let penalty_amount = stake_amount.saturating_sub(return_amount);
+
+    // Emit event
+    emit!(CancelChallengeEvent {
+        user: ctx.accounts.user.key(),
+        user_challenge: challenge.key(),
+        penalty_amount,
+        return_amount,
+        vault,
+        treasury_ata,
+        timestamp,
+    });
+
+            Ok(())
+    }
+
 }
