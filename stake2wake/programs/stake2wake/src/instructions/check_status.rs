@@ -3,7 +3,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::{
     associated_token::AssociatedToken,
     token::{ transfer_checked, Token, TokenAccount, TransferChecked },
-    token_interface::{ Mint, TokenInterface },
+    token_interface::Mint,
 };
 
 use crate::state::{ ChallengeAccount, Treasury };
@@ -16,7 +16,7 @@ pub struct CheckStatus<'info> {
 
     #[account(
         mut,
-        seeds = [b"challenge", user_challenge.key().as_ref(), user_challenge.start_time.to_le_bytes().as_ref()], // using clock here to allow multiple challenges
+        seeds = [b"challenge", user_challenge.user.key().as_ref(), user_challenge.start_time.to_le_bytes().as_ref()], // using clock here to allow multiple challenges
         bump = user_challenge.bump,
         has_one = user @ Stake2WakeError::Unauthorized // checks who is checking the challenge
     )]
@@ -46,7 +46,11 @@ pub struct CheckStatus<'info> {
     )]
     pub treasury: Account<'info, Treasury>,
 
-    #[account()]
+    #[account(
+        mut,
+        associated_token::mint = bonk_mint,
+        associated_token::authority = treasury
+    )]
     pub treasury_ata: Account<'info, TokenAccount>,
 
     pub token_program: Program<'info, Token>,
@@ -115,7 +119,7 @@ impl<'info> CheckStatus<'info> {
 
             let cpi_accounts = TransferChecked {
                 from: self.vault.to_account_info(),
-                to: self.treasury.to_account_info(),
+                to: self.treasury_ata.to_account_info(),
                 authority: challenge.to_account_info(),
                 mint: self.bonk_mint.to_account_info(),
             };
