@@ -94,5 +94,41 @@ describe("stake2wake", () => {
     assert.isTrue(error, "Expected the transaction to fail, but it succeeded");
   })
 
+
+  it("starts a challenge", async () => {
+    // Add your test logic here.
+  });
+
+  it("fails if insufficient balance", async () => {
+    // Add your test logic here.
+  });
+
+  it("checks in correctly", async () => {
+    // Add your test logic here.
+  });
+
+  it("fails to check twice", async () => {
+    // Add your test logic here.
+  });
+
+  it("fails outside wakeup time", async () => {
+    // Add your test logic here.
+  });
+
+  it("cancels challenge with full refund", async () => {
+    // Add your test logic here.
+  });
+
+  it("cancels early with 20% penalty", async () => {
+    // Add your test logic here.
+  });
+
+  it("withdraws from treasury", async () => {
+    // Add your test logic here.
+  });
+
+  it("fails withdraw for non-admin", async () => {
+    // Add your test logic here.
+  });
 });
 
