@@ -3,7 +3,7 @@ import { Program } from "@coral-xyz/anchor";
 import { Stake2wake } from "../target/types/stake2wake";
 import { PublicKey, SystemProgram } from "@solana/web3.js";
 import { ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, createMint, getAssociatedTokenAddressSync } from "@solana/spl-token";
-import { assert } from "chai";
+import { assert, use } from "chai";
 
 describe("stake2wake", () => {
   // Configure the client to use the local cluster.
@@ -49,7 +49,7 @@ describe("stake2wake", () => {
     );
   });
 
-  it("Is initialized treasury!", async () => {
+  it("Should initialize the treasury!", async () => {
     // Add your test here.
     const tx = await program.methods.initialize().accountsPartial({
       authority: admin.publicKey,
@@ -71,5 +71,28 @@ describe("stake2wake", () => {
     assert.equal(treasuryAccount.bump, treasuryBump);
     assert.equal(treasuryAccount.totalCollected.toNumber(), 0);
   });
+
+  it("Should fail if the non-admin tries to initialize the treasury", async () => {
+    let error = false;
+    try {
+      const tx = await program.methods.initialize().accountsPartial({
+        authority: user.publicKey,
+        bonkMint: bonkMint,
+        treasury: treasuryPda,
+        treasuryAta: treasuryAta,
+        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+        systemProgram: SystemProgram.programId,
+        tokenProgram: TOKEN_PROGRAM_ID
+      }).signers([user]).rpc();
+      console.log("Your transaction signature", tx);
+
+    } catch (err) {
+      error = true;
+      console.log("Expected error:", err.error?.errorMessage || err.message);
+    }
+    // other than admin no one has the access to initialize the treasury
+    assert.isTrue(error, "Expected the transaction to fail, but it succeeded");
+  })
+
 });
 
