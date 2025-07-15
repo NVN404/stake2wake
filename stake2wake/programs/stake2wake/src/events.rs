@@ -6,7 +6,7 @@ pub struct InitializeEvent{
     pub authority: Pubkey, 
     pub treasury: Pubkey, 
     pub bonk_mint: Pubkey, 
-    pub bonk_ata: Pubkey, 
+    pub treasury_ata: Pubkey, 
     pub total_collected: u64, 
 }
 

@@ -21,7 +21,7 @@ pub struct ChallengeAccount {
 #[derive(InitSpace)]
 pub struct Treasury {
     pub authority: Pubkey, // authority of the treasury
-    pub bonk_ata: Pubkey, // associated token account for BONK treasury
+    pub treasury_ata: Pubkey, // associated token account for BONK treasury
     pub bonk_mint: Pubkey, // mint of the BONK token
     pub total_collected: u64, // total amount collected in the treasury
     pub bump: u8, // bump seed for PDA
