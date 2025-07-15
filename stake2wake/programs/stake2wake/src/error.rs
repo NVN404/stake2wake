@@ -16,4 +16,6 @@ pub enum Stake2WakeError {
     MissedWakeupTime,
     #[msg("Challenge is no longer active.")]
     InactiveChallenge,
+    #[msg("insufficient funds in the treasury to complete this action")]
+    InsufficientFunds
 }
