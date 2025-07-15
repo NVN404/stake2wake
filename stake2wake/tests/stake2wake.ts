@@ -1,16 +1,75 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
 import { Stake2wake } from "../target/types/stake2wake";
+import { PublicKey, SystemProgram } from "@solana/web3.js";
+import { ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, createMint, getAssociatedTokenAddressSync } from "@solana/spl-token";
+import { assert } from "chai";
 
 describe("stake2wake", () => {
   // Configure the client to use the local cluster.
-  anchor.setProvider(anchor.AnchorProvider.env());
+  const provider = anchor.AnchorProvider.env()
+
+  anchor.setProvider(provider);
 
   const program = anchor.workspace.Stake2wake as Program<Stake2wake>;
 
-  it("Is initialized!", async () => {
+  const admin = provider.wallet;
+  const user = anchor.web3.Keypair.generate();
+
+  let bonkMint: anchor.web3.PublicKey;
+  let bonkAta: anchor.web3.PublicKey;
+  let treasuryPda: anchor.web3.PublicKey;
+  let treasuryAta: anchor.web3.PublicKey;
+  let treasuryBump: number;
+
+  before(async () => {
+    bonkMint = await createMint(
+      provider.connection,
+      admin.payer,
+      admin.publicKey,
+      null,
+      6
+    );
+
+    bonkAta = getAssociatedTokenAddressSync(
+      bonkMint,
+      admin.publicKey,
+      true
+    );
+
+    [treasuryPda, treasuryBump] = PublicKey.findProgramAddressSync(
+      [Buffer.from("treasury"), admin.publicKey.toBuffer()],
+      program.programId
+    );
+
+    treasuryAta = getAssociatedTokenAddressSync(
+      bonkMint,
+      treasuryPda,
+      true
+    );
+  });
+
+  it("Is initialized treasury!", async () => {
     // Add your test here.
-    const tx = await program.methods.initialize().rpc();
+    const tx = await program.methods.initialize().accountsPartial({
+      authority: admin.publicKey,
+      bonkMint: bonkMint,
+      treasury: treasuryPda,
+      treasuryAta: treasuryAta,
+      associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+      systemProgram: SystemProgram.programId,
+      tokenProgram: TOKEN_PROGRAM_ID
+    }).signers([]).rpc();
     console.log("Your transaction signature", tx);
+
+    const treasuryAccount = await program.account.treasury.fetch(treasuryPda);
+    console.log("treasuryAccount", treasuryAccount);
+
+    assert.equal(treasuryAccount.authority.toBase58(), admin.publicKey.toBase58());
+    assert.equal(treasuryAccount.bonkMint.toBase58(), bonkMint.toBase58());
+    assert.equal(treasuryAccount.treasuryAta.toBase58(), treasuryAta.toBase58());
+    assert.equal(treasuryAccount.bump, treasuryBump);
+    assert.equal(treasuryAccount.totalCollected.toNumber(), 0);
   });
 });
+
