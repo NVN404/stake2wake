@@ -30,7 +30,7 @@ pub struct Initialize<'info> {
         associated_token::mint = bonk_mint,
         associated_token::authority = treasury
     )]
-    pub bonk_ata: InterfaceAccount<'info, TokenAccount>, // associated token account for BONK treasury
+    pub treasury_ata: InterfaceAccount<'info, TokenAccount>, // associated token account for BONK treasury
 
     // programs useful for the transaction
     pub token_program: Interface<'info, TokenInterface>,
@@ -49,8 +49,8 @@ impl<'info> Initialize<'info> {
         self.treasury.set_inner(Treasury {
             authority: self.authority.key(),
             bonk_mint: self.bonk_mint.key(),
-            bonk_ata: self.bonk_ata.key(),
-            bump:bumps.treasury,
+            treasury_ata: self.treasury_ata.key(),
+            bump: bumps.treasury,
             total_collected: 0,
         });
         Ok(())

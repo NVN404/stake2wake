@@ -23,7 +23,7 @@ pub mod stake2wake {
             authority: ctx.accounts.authority.key(),
             treasury: ctx.accounts.treasury.key(),
             bonk_mint: ctx.accounts.bonk_mint.key(),
-            bonk_ata: ctx.accounts.bonk_ata.key(),
+            treasury_ata: ctx.accounts.treasury_ata.key(),
             total_collected: 0,
         });
         Ok(())
