@@ -2,13 +2,13 @@
 #![allow(deprecated)]
 use anchor_lang::prelude::*;
 
-pub mod state;
-pub mod instructions;
 pub mod error;
 pub mod events;
+pub mod instructions;
+pub mod state;
 
-use instructions::*;
 use events::*;
+use instructions::*;
 
 declare_id!("9E5nutqKTvWYDBWWNnH9gGyJLUQLjKaeABosszTPHhnZ");
 
@@ -50,7 +50,7 @@ pub mod stake2wake {
         Ok(())
     }
     pub fn check_status(ctx: Context<CheckStatus>) -> Result<()> {
-        let did_complete = ctx.accounts.check_status()?; // getting the status of the challenge 
+        let did_complete = ctx.accounts.check_status()?; // getting the status of the challenge
         let challenge = &ctx.accounts.user_challenge;
 
         // bool to find the wether user recieves the bonk or not
@@ -68,39 +68,50 @@ pub mod stake2wake {
             was_failed,
         });
 
-    
-
         Ok(())
     }
 
     pub fn cancel_challenge(ctx: Context<CancelChallenge>) -> Result<()> {
-    // Call the internal logic
-    ctx.accounts.cancel_challenge()?;
+        // Call the internal logic
+        ctx.accounts.cancel_challenge()?;
 
-    // Extract necessary fields for event
-    let challenge = &ctx.accounts.user_challenge;
-    let treasury_ata = ctx.accounts.treasury_ata.key();
-    let vault = ctx.accounts.vault.key();
-    let timestamp = ctx.accounts.clock.unix_timestamp as u64;
+        // Extract necessary fields for event
+        let challenge = &ctx.accounts.user_challenge;
+        let treasury_ata = ctx.accounts.treasury_ata.key();
+        let vault = ctx.accounts.vault.key();
+        let timestamp = ctx.accounts.clock.unix_timestamp as u64;
 
-    let stake_amount = challenge.stake_amount;
-    let user_balance = ctx.accounts.user_token_account.amount;
+        let stake_amount = challenge.stake_amount;
+        let user_balance = ctx.accounts.user_token_account.amount;
 
-    let return_amount = user_balance;
-    let penalty_amount = stake_amount.saturating_sub(return_amount);
+        let return_amount = user_balance;
+        let penalty_amount = stake_amount.saturating_sub(return_amount);
 
-    // Emit event
-    emit!(CancelChallengeEvent {
-        user: ctx.accounts.user.key(),
-        user_challenge: challenge.key(),
-        penalty_amount,
-        return_amount,
-        vault,
-        treasury_ata,
-        timestamp,
-    });
+        // Emit event
+        emit!(CancelChallengeEvent {
+            user: ctx.accounts.user.key(),
+            user_challenge: challenge.key(),
+            penalty_amount,
+            return_amount,
+            vault,
+            treasury_ata,
+            timestamp,
+        });
 
-            Ok(())
+        Ok(())
     }
 
+    pub fn treasury_withdraw(ctx: Context<Withdraw>, amount: u64) -> Result<()> {
+        ctx.accounts.withdraw(amount)?;
+
+        emit!(WithdrawEvent {
+            amount,
+            authority: ctx.accounts.authority.key(),
+            authority_ata: ctx.accounts.authority_ata.key(),
+            bonk_mint: ctx.accounts.bonk_mint.key(),
+            treasury: ctx.accounts.treasury.key(),
+            treasury_ata: ctx.accounts.treasury_ata.key(),
+        });
+        Ok(())
+    }
 }

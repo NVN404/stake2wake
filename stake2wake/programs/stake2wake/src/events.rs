@@ -44,3 +44,13 @@ pub struct CancelChallengeEvent{
     pub treasury_ata: Pubkey,
     pub timestamp: u64,
 }
+
+#[event]
+pub struct WithdrawEvent {
+    pub authority: Pubkey,
+    pub treasury: Pubkey,
+    pub treasury_ata: Pubkey,
+    pub authority_ata: Pubkey,
+    pub bonk_mint: Pubkey,
+    pub amount: u64,
+}
