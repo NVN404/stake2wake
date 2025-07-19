@@ -31,11 +31,18 @@ pub mod stake2wake {
 
     pub fn start_challenge(
         ctx: Context<StartChallenge>,
+        start_time: u64,
         wakeup_time: u64,
         stake_amount: u64,
-        total_days: u64
+        total_days: u64,
     ) -> Result<()> {
-        ctx.accounts.start_challenge(wakeup_time, stake_amount, total_days, &ctx.bumps)?;
+        ctx.accounts.start_challenge(
+            start_time,
+            wakeup_time,
+            stake_amount,
+            total_days,
+            &ctx.bumps,
+        )?;
 
         emit!(StartChallengeEvent {
             user: ctx.accounts.user.key(),
